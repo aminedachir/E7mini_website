@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}كيف تريد التبليغ؟ — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 900px;">
+    <h1>كيف تريد التبليغ؟</h1>
+    <p class="lead">اختر الطريقة المناسبة لحالتك.</p>
+
+    <div class="choice-grid">
+      <a class="choice-card" href="{{ url_for('complaints.direct') }}">
+        <p class="choice-card-title">التبليغ المباشر</p>
+        <p class="choice-card-sub">الاستعلام والمتابعة الميدانية</p>
+        <p class="choice-card-text">للحادثات التي تقع الآن ويمكن الإبلاغ عنها في وقت حدوثها.</p>
+      </a>
+
+      <a class="choice-card" href="{{ url_for('complaints.indirect') }}">
+        <p class="choice-card-title">التبليغ غير المباشر</p>
+        <p class="choice-card-sub">التبليغ عن الخطر والطوارئ</p>
+        <p class="choice-card-text">للإبلاغ عن جريمة أو خطر أو حالة تحتاج إلى تدخل الجهات المختصة.</p>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

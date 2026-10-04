@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import logo with context %}
+
+{% block title %}الرئيسية — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-inner">
+    {{ logo("logo-hero") }}
+    <div class="hero-text">
+      <h1 id="hero-title">{{ APP_NAME }}</h1>
+      <p class="hero-lead">
+        قدّم بلاغك أو شكواك مباشرة دون إنشاء حساب، وتابع حالته برقم المرجع.
+      </p>
+      <p class="hero-actions">
+        <a class="btn btn-primary" href="{{ url_for('complaints.new') }}">تقديم بلاغ</a>
+        <a class="btn btn-outline" href="{{ url_for('complaints.track') }}">متابعة بلاغ</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="modules-title">
+  <div class="container">
+    <h2 id="modules-title" class="section-title">كيف تعمل المنصة؟</h2>
+    <div class="grid grid-2">
+      <article class="card module-card">
+        <div class="card-header">
+          <h3 class="card-title">بوابة المواطن</h3>
+          <span class="badge badge-success">متاحة</span>
+        </div>
+        <p>تقديم البلاغات والشكاوى ومتابعة حالتها برقم المرجع — دون تسجيل أو حساب.</p>
+      </article>
+
+      <article class="card module-card">
+        <div class="card-header">
+          <h3 class="card-title">لوحة العمليات</h3>
+          <span class="badge badge-warning">قيد الإعداد</span>
+        </div>
+        <p>استقبال البلاغات والحوادث وإدارتها داخليًا (للموظفين المصرّح لهم فقط).</p>
+      </article>
+    </div>
+  </div>
+</section>
+{% endblock %}

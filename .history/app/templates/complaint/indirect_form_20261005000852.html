@@ -1,0 +1,35 @@
+cat > app/templates/complaint/indirect_form.html << 'EOF'
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea, file_field with context %}
+
+{% block title %}{{ category_label }} — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 760px;">
+    <p class="form-hint"><a href="{{ url_for('complaints.indirect') }}">→ الرجوع إلى الفئات</a></p>
+    <h1>{{ category_label }}</h1>
+    <p class="lead">املأ البيانات التالية. لا حاجة لإنشاء حساب.</p>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ form.report_kind() }}
+      {{ form.category() }}
+      {{ field(form.citizen_name, autocomplete="name") }}
+      {{ field(form.citizen_phone, autocomplete="tel", dir="ltr") }}
+      {{ field(form.complaint_type) }}
+      {{ textarea(form.description, rows=6, hint="اذكر التفاصيل: ماذا حدث، متى، ومن كان متورطًا إن أمكن.") }}
+      {{ field(form.location_description) }}
+      {{ field(form.incident_datetime, dir="ltr") }}
+      {{ file_field(form.image, accept="image/*", hint="JPG / PNG / WEBP / GIF — حتى 10 ميغابايت.") }}
+      {{ file_field(form.video, accept="video/*", hint="MP4 / WEBM / MOV — حتى 25 ميغابايت.") }}
+      <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ الإرسال…">إرسال البلاغ</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+EOF

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}متابعة بلاغ — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 720px;">
+    <h1>متابعة بلاغ</h1>
+    <p>أدخل رقم البلاغ الذي حصلت عليه عند التقديم.</p>
+
+    <form method="post" action="{{ url_for('complaints.track') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label" for="reference">رقم البلاغ</label>
+        <input class="form-control" id="reference" name="reference" dir="ltr"
+               value="{{ reference or '' }}" required>
+      </div>
+      <button type="submit" class="btn btn-primary">بحث</button>
+    </form>
+
+    {% if complaint %}
+      <div class="card" style="margin-top: 1.5rem;">
+        <h2 class="card-title">تفاصيل البلاغ</h2>
+        <p><strong>رقم البلاغ:</strong> <span dir="ltr">{{ complaint.reference_number }}</span></p>
+        <p><strong>نوع البلاغ:</strong> {{ complaint.category or complaint.complaint_type or '—' }}</p>
+        <p><strong>تاريخ التقديم:</strong> {{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>آخر تحديث:</strong> {{ complaint.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>الحالة الحالية:</strong> <span class="badge badge-info">{{ status_label }}</span></p>
+        <p class="form-hint">قد يتغيّر هذا العرض دون كشف أي تفاصيل تشغيلية داخلية.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

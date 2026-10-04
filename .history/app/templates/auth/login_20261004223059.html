@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import logo, field with context %}
+
+{% block title %}تسجيل الدخول — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="container">
+    <div class="auth-layout">
+      <aside class="auth-aside">
+        {% if LOGO_AVAILABLE %}<div class="logo-plate">{{ logo("logo-aside") }}</div>{% endif %}
+        <p class="auth-aside-title">{{ APP_NAME }}</p>
+        <p class="auth-aside-text">الدخول مخصص للمستخدمين المسجلين في النظام.</p>
+      </aside>
+
+      <div class="auth-main">
+        {{ logo("logo-auth-mobile") }}
+        <h1 class="auth-title">تسجيل الدخول</h1>
+
+        {% if form.errors %}
+          <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate data-loading>
+          {{ form.hidden_tag() }}
+          {{ field(form.email, autocomplete="username", dir="ltr") }}
+          {{ field(form.password, autocomplete="current-password", dir="ltr") }}
+          <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ تسجيل الدخول…">تسجيل الدخول</button>
+        </form>
+
+        <p class="auth-switch">ليس لديك حساب؟ <a href="{{ url_for('auth.register') }}">إنشاء حساب</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

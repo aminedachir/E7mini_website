@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea, file_field with context %}
+
+{% block title %}تقديم بلاغ — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 760px;">
+    <h1>تقديم بلاغ</h1>
+    <p class="lead">لا حاجة لإنشاء حساب. املأ النموذج التالي، وستحصل على رقم مرجعي لمتابعة بلاغك.</p>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('complaints.new') }}" enctype="multipart/form-data" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ field(form.citizen_name, autocomplete="name") }}
+      {{ field(form.citizen_phone, autocomplete="tel", dir="ltr") }}
+      {{ field(form.complaint_type) }}
+      {{ textarea(form.description, rows=6, hint="اذكر التفاصيل المهمة: ماذا حدث، متى، ومن كان متورطًا إن أمكن.") }}
+      {{ field(form.location_description, hint="اكتب أقرب عنوان أو علامة مميزة إن لم تستخدم الخريطة.") }}
+
+      <fieldset class="form-group">
+        <legend class="form-label">الموقع الجغرافي (اختياري)</legend>
+        <p class="form-hint">لن يتم الوصول إلى موقعك إلا بعد موافقتك الصريحة بالضغط على الزر أدناه.</p>
+        <button type="button" class="btn btn-outline btn-sm" id="use-gps">استخدام موقعي الحالي</button>
+        <span id="gps-status" class="form-hint" role="status"></span>
+        {{ field(form.latitude, dir="ltr") }}
+        {{ field(form.longitude, dir="ltr") }}
+      </fieldset>
+
+      {{ field(form.incident_datetime, dir="ltr") }}
+
+      {{ file_field(form.image, accept="image/*", hint="صيغ مدعومة: JPG، PNG، WEBP، GIF. الحد الأقصى 10 ميغابايت.") }}
+      {{ file_field(form.video, accept="video/*", hint="صيغ مدعومة: MP4، WEBM، MOV. الحد الأقصى 25 ميغابايت.") }}
+
+      <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ الإرسال…">إرسال البلاغ</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    var btn = document.getElementById('use-gps');
+    var status = document.getElementById('gps-status');
+    if (!btn || !navigator.geolocation) { if (btn) { btn.disabled = true; } return; }
+    btn.addEventListener('click', function () {
+      status.textContent = 'جارٍ تحديد الموقع…';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+        document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+        status.textContent = 'تم تحديد الموقع.';
+      }, function () {
+        status.textContent = 'تعذّر تحديد الموقع. يمكنك إدخاله يدويًا.';
+      }, { enableHighAccuracy: true, timeout: 10000 });
+    });
+  })();
+</script>
+{% endblock %}

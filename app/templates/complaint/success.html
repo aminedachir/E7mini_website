@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}تم استلام البلاغ — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 640px;">
+    <div class="alert alert-success" role="status">
+      <p>تم استلام بلاغك بنجاح.</p>
+    </div>
+
+    <div class="card">
+      <h1 class="card-title">رقم البلاغ</h1>
+      <p style="font-size: 1.5rem; font-weight: 800; letter-spacing: .05em;" dir="ltr">{{ complaint.reference_number }}</p>
+      <p><strong>تاريخ التقديم:</strong> {{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p><strong>الحالة الحالية:</strong> <span class="badge badge-info">{{ status_label }}</span></p>
+      <p class="form-hint">احفظ هذا الرقم للرجوع إليه لاحقًا. لن يظهر لك أي معلومات داخلية عن سير التحقيق.</p>
+      <p>
+        <a class="btn btn-primary" href="{{ url_for('complaints.track') }}">متابعة البلاغ</a>
+        <a class="btn btn-outline" href="{{ url_for('main.home') }}">الرئيسية</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

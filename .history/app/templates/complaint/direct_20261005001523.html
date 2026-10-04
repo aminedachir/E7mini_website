@@ -1,0 +1,142 @@
+cat > app/templates/complaint/direct.html << 'EOF'
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+{% from "components/macros.html" import field, textarea with context %}
+
+{% block title %}تبليغ مباشر — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 760px;">
+    <div class="emergency-banner" role="alert">أنت تبلغ عن حادثة تحدث الآن</div>
+
+    <h1>التبليغ المباشر</h1>
+    <p class="lead">سجّل مقطعًا قصيرًا أو اكتب البلاغ. لن يتم تشغيل الكاميرا أو الميكروفون إلا بعد ضغطك على الزر.</p>
+
+    <div class="direct-actions">
+      <button type="button" class="btn btn-primary" id="start-camera">تسجيل فيديو</button>
+      <button type="button" class="btn btn-outline" id="write-only">كتابة البلاغ</button>
+    </div>
+
+    <video id="camera-preview" playsinline muted></video>
+    <p class="form-hint" id="camera-status" role="status"></p>
+    <button type="button" class="btn btn-outline btn-sm" id="stop-camera" hidden>إيقاف الكاميرا</button>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate data-loading id="direct-form">
+      {{ form.hidden_tag() }}
+      {{ form.report_kind() }}
+      {{ form.category() }}
+      {{ field(form.citizen_name, autocomplete="name") }}
+      {{ field(form.citizen_phone, autocomplete="tel", dir="ltr") }}
+      {{ textarea(form.description, rows=5, hint="صف ما يحدث الآن.") }}
+
+      <fieldset class="form-group">
+        <legend class="form-label">الموقع (اختياري)</legend>
+        <p class="form-hint">اضغط "تحديد موقعي" للسماح بالوصول إلى موقعك، أو انقر على الخريطة لتحديد الموقع يدويًا.</p>
+        <button type="button" class="btn btn-outline btn-sm" id="use-gps">تحديد موقعي</button>
+        <span id="gps-status" class="form-hint" role="status"></span>
+
+        <div id="location-map" class="location-map" aria-label="خريطة تحديد الموقع"></div>
+
+        {{ field(form.location_description, hint="سيُملأ تلقائيًا من الخريطة إن أمكن، ويمكنك تعديله.") }}
+        {{ field(form.latitude, dir="ltr") }}
+        {{ field(form.longitude, dir="ltr") }}
+        </fieldset>
+
+      {{ field(form.incident_datetime, dir="ltr") }}
+
+      <input type="file" name="video" accept="video/*" id="video-input" hidden>
+
+      <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ الإرسال…">إرسال البلاغ</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='js/location-map.js') }}" defer></script>
+<script>
+  (function () {
+    var startBtn = document.getElementById('start-camera');
+    var stopBtn  = document.getElementById('stop-camera');
+    var preview  = document.getElementById('camera-preview');
+    var status   = document.getElementById('camera-status');
+    var writeBtn = document.getElementById('write-only');
+    var form     = document.getElementById('direct-form');
+    var stream   = null;
+    var recorder = null;
+    var chunks   = [];
+    var videoInput = document.getElementById('video-input');
+
+    if (writeBtn) {
+      writeBtn.addEventListener('click', function () {
+        document.getElementById('description').focus();
+      });
+    }
+
+    if (startBtn && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      startBtn.addEventListener('click', function () {
+        status.textContent = 'جارٍ تشغيل الكاميرا…';
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+          .then(function (s) {
+            stream = s;
+            preview.srcObject = s;
+            preview.classList.add('is-on');
+            preview.play();
+            stopBtn.hidden = false;
+            status.textContent = 'الكاميرا تعمل. يتم التسجيل الآن — اضغط "إرسال البلاغ" عند الانتهاء.';
+            chunks = [];
+            recorder = new MediaRecorder(s);
+            recorder.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+            recorder.onstop = function () {
+              var blob = new Blob(chunks, { type: 'video/webm' });
+              var file = new File([blob], 'direct_' + Date.now() + '.webm', { type: 'video/webm' });
+              var dt = new DataTransfer();
+              dt.items.add(file);
+              videoInput.files = dt.files;
+            };
+            recorder.start();
+          })
+          .catch(function () {
+            status.textContent = 'تعذّر الوصول إلى الكاميرا أو الميكروفون. يمكنك كتابة البلاغ.';
+          });
+      });
+
+      stopBtn.addEventListener('click', function () {
+        if (recorder && recorder.state !== 'inactive') { recorder.stop(); }
+        if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); }
+        preview.classList.remove('is-on');
+        stopBtn.hidden = true;
+        status.textContent = 'تم إيقاف التسجيل. اضغط "إرسال البلاغ" للإرسال.';
+      });
+
+      form.addEventListener('submit', function () {
+        if (recorder && recorder.state === 'recording') { recorder.stop(); }
+        if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); }
+      });
+    } else if (startBtn) {
+      startBtn.disabled = true;
+    }
+
+    // تهيئة الخريطة
+    if (window.AHMINI_map) {
+      window.AHMINI_map.init({
+        containerId: 'location-map',
+        latInputId:  'latitude',
+        lngInputId:  'longitude',
+        descInputId: 'location_description',
+        gpsButtonId: 'use-gps',
+        statusId:    'gps-status'
+      });
+    }
+  })();
+</script>
+{% endblock %}
+EOF
