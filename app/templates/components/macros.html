@@ -1,0 +1,33 @@
+{# عناصر قابلة لإعادة الاستخدام. الاستيراد: {% from "components/macros.html" import logo with context %} #}
+
+{# شعار الشرطة. لا يُعدَّل الشعار؛ يظهر فقط إذا وُجد الملف static/images/police-logo.png #}
+{% macro logo(css_class="", alt="شعار الشرطة الجزائرية") -%}
+  {%- if LOGO_AVAILABLE -%}
+    <img class="logo {{ css_class }}" src="{{ url_for('static', filename='images/police-logo.png') }}" alt="{{ alt }}">
+  {%- endif -%}
+{%- endmacro %}
+
+{# حقل نموذج مع تسمية ورسالة خطأ مرتبطة به (إتاحة الوصول) #}
+{% macro field(f, autocomplete="off", dir="rtl", hint="") -%}
+  {%- set ids = [] -%}
+  {%- if hint %}{% set _ = ids.append(f.id ~ "-hint") %}{% endif -%}
+  {%- if f.errors %}{% set _ = ids.append(f.id ~ "-error") %}{% endif -%}
+  <div class="form-group">
+    {{ f.label(class="form-label") }}
+    {{ f(class="form-control" ~ (" is-invalid" if f.errors else ""),
+         autocomplete=autocomplete,
+         dir=dir,
+         **{"aria-invalid": "true" if f.errors else "false",
+            "aria-describedby": ids | join(" ")}) }}
+    {% if hint %}<p class="form-hint" id="{{ f.id }}-hint">{{ hint }}</p>{% endif %}
+    {% if f.errors %}<p class="field-error" id="{{ f.id }}-error">{{ f.errors[0] }}</p>{% endif %}
+  </div>
+{%- endmacro %}
+
+{# حالة فارغة: للقوائم والجداول التي لا تحتوي بيانات #}
+{% macro empty_state(title, text="") -%}
+  <div class="empty-state">
+    <p class="empty-state-title">{{ title }}</p>
+    {% if text %}<p>{{ text }}</p>{% endif %}
+  </div>
+{%- endmacro %}

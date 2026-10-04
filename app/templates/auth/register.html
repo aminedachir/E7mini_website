@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import logo, field with context %}
+
+{% block title %}إنشاء حساب — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="container">
+    <div class="auth-layout">
+      <aside class="auth-aside">
+        {% if LOGO_AVAILABLE %}<div class="logo-plate">{{ logo("logo-aside") }}</div>{% endif %}
+        <p class="auth-aside-title">{{ APP_NAME }}</p>
+        <p class="auth-aside-text">أنشئ حسابًا للوصول إلى خدمات المنصة عند إتاحتها.</p>
+      </aside>
+
+      <div class="auth-main">
+        {{ logo("logo-auth-mobile") }}
+        <h1 class="auth-title">إنشاء حساب</h1>
+
+        {% if form.errors %}
+          <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('auth.register') }}" novalidate data-loading>
+          {{ form.hidden_tag() }}
+          {{ field(form.name, autocomplete="name") }}
+          {{ field(form.email, autocomplete="email", dir="ltr") }}
+          {{ field(form.password, autocomplete="new-password", dir="ltr", hint="8 أحرف على الأقل.") }}
+          {{ field(form.confirm_password, autocomplete="new-password", dir="ltr") }}
+          <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ إنشاء الحساب…">إنشاء حساب</button>
+        </form>
+
+        <p class="auth-switch">لديك حساب بالفعل؟ <a href="{{ url_for('auth.login') }}">تسجيل الدخول</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

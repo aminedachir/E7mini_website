@@ -1,0 +1,12 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container flash-container">
+      {% for category, message in messages %}
+        {% set level = category if category in ['success', 'danger', 'warning', 'info'] else 'info' %}
+        <div class="alert alert-{{ level }}" role="{{ 'alert' if level in ['danger', 'warning'] else 'status' }}">
+          <p>{{ message }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

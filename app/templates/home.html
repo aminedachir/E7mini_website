@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import logo with context %}
+
+{% block title %}الرئيسية — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-inner">
+    {{ logo("logo-hero") }}
+    <div class="hero-text">
+      <h1 id="hero-title">{{ APP_NAME }}</h1>
+      <p class="hero-lead">
+        منصة إلكترونية لاستقبال بلاغات وشكاوى المواطنين، وتمكين الجهات المختصة
+        من متابعتها وإدارتها بسرعة ودقة.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="modules-title">
+  <div class="container">
+    <h2 id="modules-title" class="section-title">أنظمة المنصة</h2>
+    <div class="grid grid-2">
+      <article class="card module-card">
+        <div class="card-header">
+          <h3 class="card-title">بوابة المواطن</h3>
+          <span class="badge badge-warning">قيد الإعداد</span>
+        </div>
+        <p>تقديم البلاغات والشكاوى ومتابعة حالتها.</p>
+      </article>
+
+      <article class="card module-card">
+        <div class="card-header">
+          <h3 class="card-title">لوحة العمليات</h3>
+          <span class="badge badge-warning">قيد الإعداد</span>
+        </div>
+        <p>استقبال البلاغات والحوادث وإدارتها داخليًا.</p>
+      </article>
+    </div>
+
+    <div class="alert alert-info" role="status">
+      <p>المنصة قيد التطوير، وستُتاح الخدمات تدريجيًا.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

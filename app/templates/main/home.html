@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}الرئيسية — {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <h1>بلاغ المواطن يصل إلى غرفة العمليات<br>بدقة وسرعة</h1>
+    <p class="lead">
+      منصة واحدة بنظامين: بوابة يقدّم من خلالها المواطن بلاغه أو شكواه،
+      ولوحة عمليات داخلية تستقبل البلاغات وتتابعها حتى إغلاقها.
+    </p>
+  </div>
+</section>
+
+<section class="systems">
+  <div class="container systems-grid">
+    <article class="system system-citizen">
+      <h2>بوابة المواطن</h2>
+      <p>تقديم البلاغات والشكاوى ومتابعة حالتها.</p>
+      <span class="status status-pending">قيد الإعداد</span>
+    </article>
+
+    <article class="system system-ops">
+      <h2>لوحة العمليات</h2>
+      <p>استقبال البلاغات والحوادث وإدارتها داخليًا.</p>
+      <span class="status status-pending">قيد الإعداد</span>
+    </article>
+  </div>
+</section>
+
+<section class="health">
+  <div class="container">
+    <div class="health-box" role="status">
+      <span class="dot" aria-hidden="true"></span>
+      <p>التطبيق يعمل. تم إنجاز الأساس المعماري للمشروع، وبقية الأنظمة ستُضاف على مراحل.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
