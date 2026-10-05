@@ -1,0 +1,98 @@
+{# عناصر قابلة لإعادة الاستخدام. الاستيراد: {% from "components/macros.html" import logo with context %} #}
+
+
+{# أيقونات SVG خطّية (بدون إيموجي). الاستيراد: {% from "components/macros.html" import icon %}
+   تستخدم currentColor فتتبع لون النص. الاتجاه: arrow-left يشير إلى "التالي" في RTL، وarrow-right إلى "الرجوع". #}
+{% macro icon(name, size=24, css_class="") -%}
+  {%- set paths = {
+    "shield": '<path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/>',
+    "shield-check": '<path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
+    "monitor": '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M8.5 9.5L10.5 11l-2 1.5M12.5 12.5h3"/>',
+    "storm": '<path d="M17 17h1a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.7 8.4 4.6 4.6 0 0 0 7 17h1"/><path d="M13 11l-3 5h4l-3 5"/>',
+    "traffic": '<rect x="8" y="2.5" width="8" height="19" rx="3"/><circle cx="12" cy="7.5" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="12" cy="16.5" r="1.1"/>',
+    "video": '<rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M21.5 8.5L15.5 12l6 3.5v-7z"/>',
+    "pencil": '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+    "map-pin": '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+    "arrow-left": '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+    "arrow-right": '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    "alert": '<path d="M12 3.5l9.5 16.5h-19L12 3.5z"/><path d="M12 10v4.5M12 17.4v.01"/>',
+    "radio": '<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>',
+    "file-text": '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    "user": '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+    "lock": '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    "hash": '<path d="M5 9h14M5 15h14M10 3L8 21M16 3l-2 18"/>',
+    "inbox": '<path d="M3 13l3-8h12l3 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/><path d="M3 13h5l1 3h6l1-3h5"/>',
+    "check": '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+  } -%}
+  <svg class="icon {{ css_class }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{{ paths[name] | safe }}</svg>
+{%- endmacro %}
+
+{# شارة حالة. kind: info | success | warning | danger | neutral #}
+{% macro status_badge(text, kind="info") -%}
+  <span class="badge badge-{{ kind }}">{{ text }}</span>
+{%- endmacro %}
+
+{# شعار الشرطة. لا يُعدَّل الشعار؛ يظهر فقط إذا وُجد الملف static/images/police-logo.png #}
+{% macro logo(css_class="", alt="شعار الشرطة الجزائرية") -%}
+  {%- if LOGO_AVAILABLE -%}
+    <img class="logo {{ css_class }}" src="{{ url_for('static', filename='images/police-logo.png') }}" alt="{{ alt }}" width="323" height="380" decoding="async">
+  {%- endif -%}
+{%- endmacro %}
+
+{# حقل نموذج مع تسمية ورسالة خطأ مرتبطة به (إتاحة الوصول) #}
+{% macro field(f, autocomplete="off", dir="rtl", hint="") -%}
+  {%- set ids = [] -%}
+  {%- if hint %}{% set _ = ids.append(f.id ~ "-hint") %}{% endif -%}
+  {%- if f.errors %}{% set _ = ids.append(f.id ~ "-error") %}{% endif -%}
+  <div class="form-group">
+    {{ f.label(class="form-label") }}
+    {{ f(class="form-control" ~ (" is-invalid" if f.errors else ""),
+         autocomplete=autocomplete,
+         dir=dir,
+         **{"aria-invalid": "true" if f.errors else "false",
+            "aria-describedby": ids | join(" ")}) }}
+    {% if hint %}<p class="form-hint" id="{{ f.id }}-hint">{{ hint }}</p>{% endif %}
+    {% if f.errors %}<p class="field-error" id="{{ f.id }}-error">{{ f.errors[0] }}</p>{% endif %}
+  </div>
+{%- endmacro %}
+
+{# حقل نصّي متعدد الأسطر #}
+{% macro textarea(f, rows=5, hint="") -%}
+  {%- set ids = [] -%}
+  {%- if hint %}{% set _ = ids.append(f.id ~ "-hint") %}{% endif -%}
+  {%- if f.errors %}{% set _ = ids.append(f.id ~ "-error") %}{% endif -%}
+  <div class="form-group">
+    {{ f.label(class="form-label") }}
+    {{ f(class="form-control" ~ (" is-invalid" if f.errors else ""),
+         rows=rows,
+         **{"aria-invalid": "true" if f.errors else "false",
+            "aria-describedby": ids | join(" ")}) }}
+    {% if hint %}<p class="form-hint" id="{{ f.id }}-hint">{{ hint }}</p>{% endif %}
+    {% if f.errors %}<p class="field-error" id="{{ f.id }}-error">{{ f.errors[0] }}</p>{% endif %}
+  </div>
+{%- endmacro %}
+
+{# حقل رفع ملف مع تلميح ورسالة خطأ #}
+{% macro file_field(f, accept="", hint="") -%}
+  {%- set ids = [] -%}
+  {%- if hint %}{% set _ = ids.append(f.id ~ "-hint") %}{% endif -%}
+  {%- if f.errors %}{% set _ = ids.append(f.id ~ "-error") %}{% endif -%}
+  <div class="form-group">
+    {{ f.label(class="form-label") }}
+    {{ f(class="form-control" ~ (" is-invalid" if f.errors else ""),
+         accept=accept,
+         **{"aria-invalid": "true" if f.errors else "false",
+            "aria-describedby": ids | join(" ")}) }}
+    {% if hint %}<p class="form-hint" id="{{ f.id }}-hint">{{ hint }}</p>{% endif %}
+    {% if f.errors %}<p class="field-error" id="{{ f.id }}-error">{{ f.errors[0] }}</p>{% endif %}
+  </div>
+{%- endmacro %}
+
+{# حالة فارغة: للقوائم والجداول التي لا تحتوي بيانات #}
+{% macro empty_state(title, text="", icon_name="inbox") -%}
+  <div class="empty-state">
+    <span class="empty-state-icon">{{ icon(icon_name, 28) }}</span>
+    <p class="empty-state-title">{{ title }}</p>
+    {% if text %}<p>{{ text }}</p>{% endif %}
+  </div>
+{%- endmacro %}

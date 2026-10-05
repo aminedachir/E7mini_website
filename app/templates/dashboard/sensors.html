@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}أحداث الزلازل والحرائق — لوحة العمليات{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <div class="page-head">
+      <h1>أحداث الزلازل والحرائق</h1>
+      <p class="lead">الأحداث المسجّلة من تطبيقَي القياس الميداني.</p>
+      <p>
+        <a class="btn btn-primary" href="{{ url_for('dashboard.sensor_new') }}">تسجيل حدث جديد</a>
+      </p>
+    </div>
+
+    <form method="get" action="{{ url_for('dashboard.sensors_list') }}" class="filter-bar" role="search">
+      <div class="filter-field">
+        <label class="form-label" for="type">نوع الحدث</label>
+        <select class="form-control" id="type" name="type">
+          <option value="">— الكل —</option>
+          {% for key, label in event_types.items() %}
+            <option value="{{ key }}" {% if type_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="form-label" for="severity">الخطورة</label>
+        <select class="form-control" id="severity" name="severity">
+          <option value="">— الكل —</option>
+          {% for key, label in severities.items() %}
+            <option value="{{ key }}" {% if severity_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">تصفية</button>
+        {% if type_filter or severity_filter %}
+          <a class="btn btn-outline btn-sm" href="{{ url_for('dashboard.sensors_list') }}">إزالة الفلاتر</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <p class="results-count">عدد الأحداث: <strong>{{ events | length }}</strong></p>
+
+    {% if events %}
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>النوع</th>
+              <th>الخطورة</th>
+              <th>القوة</th>
+              <th>الموقع</th>
+              <th>وقت الكشف</th>
+              <th>سجّله</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in events %}
+              <tr>
+                <td>{{ ev.event_type_label }}</td>
+                <td><span class="badge badge-neutral">{{ ev.severity_label }}</span></td>
+                <td>
+                  {% if ev.magnitude is not none %}
+                    <span dir="ltr">{{ ev.magnitude }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>{{ ev.location_description or '—' }}</td>
+                <td>{{ ev.detected_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ ev.reported_by.name if ev.reported_by else '—' }}</td>
+                <td>
+                  <a class="btn btn-outline btn-sm"
+                     href="{{ url_for('dashboard.sensor_detail', event_id=ev.id) }}">تفاصيل</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p class="empty-state-title">لا توجد أحداث مسجّلة</p>
+        <p>ابدأ بتسجيل حدث زلزال أو حريق.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

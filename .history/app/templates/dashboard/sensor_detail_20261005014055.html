@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.event_type_label }} — لوحة العمليات{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <p class="back-link-wrap">
+      <a class="back-link" href="{{ url_for('dashboard.sensors_list') }}">→ الرجوع إلى الأحداث</a>
+    </p>
+
+    <div class="page-head">
+      <h1>{{ event.event_type_label }}</h1>
+      <p class="lead">
+        <span class="badge badge-neutral">{{ event.severity_label }}</span>
+      </p>
+    </div>
+
+    <div class="card detail-card">
+      <h2 class="card-title">بيانات الحدث</h2>
+      <dl class="detail-list">
+        <dt>النوع</dt><dd>{{ event.event_type_label }}</dd>
+        <dt>الخطورة</dt><dd>{{ event.severity_label }}</dd>
+        {% if event.magnitude is not none %}
+          <dt>القوة</dt><dd><span dir="ltr">{{ event.magnitude }} Richter</span></dd>
+        {% endif %}
+        <dt>الموقع</dt><dd>{{ event.location_description or '—' }}</dd>
+        <dt>وقت الكشف</dt><dd>{{ event.detected_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+        <dt>سجّله</dt><dd>{{ event.reported_by.name if event.reported_by else '—' }}</dd>
+        <dt>تاريخ الإدخال</dt><dd>{{ event.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+      </dl>
+    </div>
+
+    {% if event.details %}
+      <div class="card detail-card">
+        <h2 class="card-title">تفاصيل إضافية</h2>
+        <p class="detail-description">{{ event.details }}</p>
+      </div>
+    {% endif %}
+
+    <div class="card detail-card">
+      <h2 class="card-title">الموقع الجغرافي</h2>
+      {% if event.latitude and event.longitude %}
+        <p class="form-hint">الإحداثيات: <span dir="ltr">{{ event.latitude }}, {{ event.longitude }}</span></p>
+        <div id="sensor-map" class="location-map" aria-label="خريطة موقع الحدث"></div>
+      {% else %}
+        <p class="text-muted">لم تُسجَّل إحداثيات.</p>
+      {% endif %}
+    </div>
+
+    <div class="card detail-card">
+      <form method="post"
+            action="{{ url_for('dashboard.sensor_delete', event_id=event.id) }}"
+            onsubmit="return confirm('هل أنت متأكد من حذف هذا الحدث؟');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger">حذف الحدث</button>
+      </form>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if event.latitude and event.longitude %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var map = L.map('sensor-map').setView([{{ event.latitude }}, {{ event.longitude }}], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; مساهمو OpenStreetMap'
+  }).addTo(map);
+  L.marker([{{ event.latitude }}, {{ event.longitude }}]).addTo(map);
+});
+</script>
+{% endif %}
+{% endblock %}

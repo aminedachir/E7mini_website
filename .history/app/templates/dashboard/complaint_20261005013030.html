@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}شكوى {{ complaint.reference_number }} — لوحة العمليات{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <p class="back-link-wrap">
+      <a class="back-link" href="{{ url_for('dashboard.index') }}">
+        → الرجوع إلى قائمة الشكاوى
+      </a>
+    </p>
+
+    <div class="page-head">
+      <h1>شكوى <span dir="ltr">{{ complaint.reference_number }}</span></h1>
+      <p class="lead">
+        <span class="badge badge-neutral">{{ complaint.status }}</span>
+        {% if complaint.report_mode == "direct" %}
+          <span class="badge badge-warning">تبليغ مباشر</span>
+        {% else %}
+          <span class="badge badge-info">تبليغ غير مباشر</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="detail-grid">
+
+      {# ----- بيانات مقدّم الشكوى ----- #}
+      <div class="card detail-card">
+        <h2 class="card-title">بيانات مقدّم الشكوى</h2>
+        <dl class="detail-list">
+          <dt>الاسم الكامل</dt>
+          <dd>{{ complaint.citizen_name }}</dd>
+
+          <dt>رقم الهاتف</dt>
+          <dd><a href="tel:{{ complaint.citizen_phone }}" dir="ltr">{{ complaint.citizen_phone }}</a></dd>
+        </dl>
+      </div>
+
+      {# ----- تفاصيل الشكوى ----- #}
+      <div class="card detail-card">
+        <h2 class="card-title">تفاصيل الشكوى</h2>
+        <dl class="detail-list">
+          <dt>النوع</dt>
+          <dd>
+            {% if complaint.category %}
+              {{ complaint.category }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </dd>
+
+          <dt>التفصيل</dt>
+          <dd>{{ complaint.complaint_type or '—' }}</dd>
+
+          <dt>تاريخ الحادث</dt>
+          <dd>{{ complaint.incident_datetime.strftime('%Y-%m-%d %H:%M') }}</dd>
+
+          <dt>تاريخ التقديم</dt>
+          <dd>{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+
+          <dt>آخر تحديث</dt>
+          <dd>{{ complaint.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+        </dl>
+      </div>
+
+    </div>
+
+    {# ----- الوصف الكامل ----- #}
+    <div class="card detail-card">
+      <h2 class="card-title">وصف الشكوى</h2>
+      <p class="detail-description">{{ complaint.description }}</p>
+    </div>
+
+    {# ----- الموقع ----- #}
+    <div class="card detail-card">
+      <h2 class="card-title">الموقع</h2>
+
+      {% if complaint.location_description %}
+        <p><strong>الوصف:</strong> {{ complaint.location_description }}</p>
+      {% endif %}
+
+      {% if complaint.latitude and complaint.longitude %}
+        <p class="form-hint">
+          الإحداثيات:
+          <span dir="ltr">{{ complaint.latitude }}, {{ complaint.longitude }}</span>
+        </p>
+        <div id="detail-map" class="location-map" aria-label="خريطة موقع الشكوى"></div>
+      {% elif complaint.location_description %}
+        <p class="form-hint">لم تُسجَّل إحداثيات دقيقة.</p>
+      {% else %}
+        <p class="text-muted">لم يُحدَّد الموقع.</p>
+      {% endif %}
+    </div>
+
+    {# ----- المرفقات ----- #}
+    <div class="card detail-card">
+      <h2 class="card-title">المرفقات</h2>
+
+      {% set attachments = complaint.attachments %}
+      {% if attachments %}
+        <div class="attachments-grid">
+          {% for att in attachments %}
+            <div class="attachment-item">
+              <p class="attachment-kind">
+                {% if att.kind == "image" %}صورة{% else %}فيديو{% endif %}
+                {% if att.size_bytes %}
+                  — {{ (att.size_bytes / 1024) | round(0) | int }} كيلوبايت
+                {% endif %}
+              </p>
+
+              {% if att.kind == "image" %}
+                <a href="{{ url_for('complaints.media', attachment_id=att.id) }}" target="_blank" rel="noopener">
+                  <img class="attachment-preview"
+                       src="{{ url_for('complaints.media', attachment_id=att.id) }}"
+                       alt="{{ att.original_filename or 'صورة الشكوى' }}"
+                       loading="lazy">
+                </a>
+              {% elif att.kind == "video" %}
+                <video class="attachment-preview" controls playsinline preload="metadata">
+                  <source src="{{ url_for('complaints.media', attachment_id=att.id) }}"
+                          type="{{ att.mime_type or 'video/mp4' }}">
+                  متصفحك لا يدعم عرض الفيديو.
+                </video>
+              {% else %}
+                <a href="{{ url_for('complaints.media', attachment_id=att.id) }}" target="_blank" rel="noopener">
+                  تحميل المرفق
+                </a>
+              {% endif %}
+
+              {% if att.original_filename %}
+                <p class="form-hint" dir="ltr">{{ att.original_filename }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted">لا توجد مرفقات.</p>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if complaint.latitude and complaint.longitude %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var map = L.map('detail-map').setView([{{ complaint.latitude }}, {{ complaint.longitude }}], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; مساهمو OpenStreetMap'
+  }).addTo(map);
+  L.marker([{{ complaint.latitude }}, {{ complaint.longitude }}]).addTo(map);
+});
+</script>
+{% endif %}
+{% endblock %}

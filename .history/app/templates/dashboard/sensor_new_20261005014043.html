@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea with context %}
+
+{% block title %}تسجيل حدث جديد — لوحة العمليات{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container container-narrow">
+
+    <p class="back-link-wrap">
+      <a class="back-link" href="{{ url_for('dashboard.sensors_list') }}">→ الرجوع إلى الأحداث</a>
+    </p>
+
+    <div class="page-head">
+      <h1>تسجيل حدث جديد</h1>
+      <p class="lead">أدخل بيانات الحدث القادمة من تطبيق الزلازل أو الحرائق.</p>
+    </div>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('dashboard.sensor_new') }}" novalidate data-loading>
+      {{ form.hidden_tag() }}
+
+      {{ field(form.event_type) }}
+      {{ field(form.severity) }}
+      {{ field(form.magnitude, dir="ltr", hint="اختياري للحريق، مطلوب للزلازل.") }}
+      {{ field(form.location_description) }}
+      {{ field(form.latitude, dir="ltr") }}
+      {{ field(form.longitude, dir="ltr") }}
+      {{ field(form.detected_at, dir="ltr") }}
+      {{ textarea(form.details, rows=6, hint="اكتب ملاحظات إضافية إن وُجدت.") }}
+
+      <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ الحفظ…">حفظ الحدث</button>
+    </form>
+
+  </div>
+</section>
+{% endblock %}

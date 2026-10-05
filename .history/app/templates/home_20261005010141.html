@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import icon, logo with context %}
+
+{% block title %}احميني — منصة وطنية للتبليغ{% endblock %}
+
+{% block content %}
+<section class="hero hero-home">
+  {# زخرفة الدوائر مع الشعار الرسمي في المركز (الشعار بلا أي تعديل) #}
+  <div class="hero-deco" aria-hidden="true">
+    <svg viewBox="0 0 340 340" fill="none" stroke="currentColor" focusable="false">
+      <circle cx="170" cy="170" r="164" stroke-width="1" opacity=".10"/>
+      <circle cx="170" cy="170" r="128" stroke-width="1" opacity=".16"/>
+      <circle cx="170" cy="170" r="94"  stroke-width="1.5" opacity=".24"/>
+    </svg>
+    <span class="hero-logo-wrap">{{ logo("logo-hero", alt="") }}</span>
+  </div>
+
+  <div class="container hero-home-inner">
+    <h1 class="hero-home-title">احميني</h1>
+    <p class="hero-home-lead">منصة وطنية للتبليغ عن الحوادث والمخاطر</p>
+    <p class="hero-home-sub">أبلغ عن حادثة أو خطر بسرعة وأمان.</p>
+    <div class="hero-home-actions">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('complaints.choose') }}">تقديم بلاغ</a>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('complaints.track') }}">متابعة بلاغ</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="feature-grid">
+      <div class="feature">
+        <span class="feature-icon">{{ icon("user", 24) }}</span>
+        <div>
+          <h3>بدون حساب</h3>
+          <p>لا حاجة لتسجيل أو كلمة مرور. أرسل بلاغك مباشرة.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">{{ icon("shield-check", 24) }}</span>
+        <div>
+          <h3>سريع وآمن</h3>
+          <p>اتصال مشفّر، وبياناتك تُحفظ لدى الجهات المختصة فقط.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">{{ icon("hash", 24) }}</span>
+        <div>
+          <h3>رقم مرجعي</h3>
+          <p>تحصل على رقم لمتابعة حالة بلاغك في أي وقت.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

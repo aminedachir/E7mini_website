@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}اختر الفئة — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 1000px;">
+    <h1>اختر الفئة المناسبة</h1>
+    <p class="lead">حدّد نوع البلاغ ليصل إلى الجهة المختصة مباشرة.</p>
+
+    <div class="category-grid">
+      <a class="category-card" href="{{ url_for('complaints.indirect_category', category='security') }}">
+        <span class="cat-icon" aria-hidden="true">🛡️</span>
+        <p class="cat-title">أمني</p>
+        <p class="cat-sub">مختلف الجرائم: سرقة، اعتداء، تخريب، تهديد، وغيرها.</p>
+      </a>
+
+      <a class="category-card" href="{{ url_for('complaints.indirect_category', category='cybercrime') }}">
+        <span class="cat-icon" aria-hidden="true">💻</span>
+        <p class="cat-title">جرائم سيبرانية</p>
+        <p class="cat-sub">الجرائم والمخاطر الإلكترونية.</p>
+      </a>
+
+      <a class="category-card" href="{{ url_for('complaints.indirect_category', category='natural_disaster') }}">
+        <span class="cat-icon" aria-hidden="true">🌪️</span>
+        <p class="cat-title">الكوارث الطبيعية</p>
+        <p class="cat-sub">زلازل، فيضانات، حرائق، وغيرها.</p>
+      </a>
+
+      <a class="category-card" href="{{ url_for('complaints.indirect_category', category='road_safety') }}">
+        <span class="cat-icon" aria-hidden="true">🚦</span>
+        <p class="cat-title">أمن الطرقات</p>
+        <p class="cat-sub">الحوادث والمخاطر المرورية.</p>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

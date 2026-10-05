@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea with context %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+
+{% block title %}تبليغ مباشر — احميني{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width: 760px;">
+    <div class="emergency-banner" role="alert">أنت تبلغ عن حادثة تحدث الآن</div>
+
+    <h1>التبليغ المباشر</h1>
+    <p class="lead">سجّل مقطعًا قصيرًا أو اكتب البلاغ. لن يتم تشغيل الكاميرا أو الميكروفون إلا بعد ضغطك على الزر.</p>
+
+    <div class="direct-actions">
+      <button type="button" class="btn btn-primary" id="start-camera">تسجيل فيديو</button>
+      <button type="button" class="btn btn-outline" id="write-only">كتابة البلاغ</button>
+    </div>
+
+    <video id="camera-preview" playsinline muted></video>
+    <p class="form-hint" id="camera-status" role="status"></p>
+
+    <video id="review-player" controls playsinline hidden style="width:100%; max-width:480px; border-radius:6px; margin-bottom:1rem;"></video>
+
+    <div id="camera-controls" hidden style="display:flex; gap:.5rem; margin-bottom:1rem;">
+      <button type="button" class="btn btn-outline btn-sm" id="re-record">إعادة التسجيل</button>
+      <button type="button" class="btn btn-primary btn-sm" id="use-recording">استخدام هذا التسجيل</button>
+    </div>
+
+    <button type="button" class="btn btn-outline btn-sm" id="stop-camera" hidden>إيقاف التسجيل</button>
+
+    {% if form.errors %}
+      <div class="alert alert-danger" role="alert"><p>يرجى تصحيح الأخطاء الموضّحة أدناه.</p></div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate data-loading id="direct-form">
+      {{ form.hidden_tag() }}
+      {{ form.report_mode() }}
+      {{ form.category() }}
+      {{ field(form.citizen_name, autocomplete="name") }}
+      {{ field(form.citizen_phone, autocomplete="tel", dir="ltr") }}
+      {{ textarea(form.description, rows=5, hint="صف ما يحدث الآن.") }}
+
+      <fieldset class="form-group">
+        <legend class="form-label">الموقع (اختياري)</legend>
+        <p class="form-hint">اضغط "تحديد موقعي" للسماح بالوصول إلى موقعك، أو انقر على الخريطة لتحديد الموقع يدويًا.</p>
+        <button type="button" class="btn btn-outline btn-sm" id="use-gps">تحديد موقعي</button>
+        <span id="gps-status" class="form-hint" role="status"></span>
+
+        <div id="location-map" class="location-map" aria-label="خريطة تحديد الموقع"></div>
+
+        {{ field(form.location_description, hint="سيُملأ تلقائيًا من الخريطة إن أمكن، ويمكنك تعديله.") }}
+        {{ field(form.latitude, dir="ltr") }}
+        {{ field(form.longitude, dir="ltr") }}
+      </fieldset>
+
+      {{ field(form.incident_datetime, dir="ltr") }}
+
+      <input type="file" name="video" accept="video/*" id="video-input" hidden>
+
+      <button type="submit" class="btn btn-primary btn-block" data-loading-text="جارٍ الإرسال…">إرسال البلاغ</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='js/location-map.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var startBtn = document.getElementById('start-camera');
+  var stopBtn  = document.getElementById('stop-camera');
+  var preview  = document.getElementById('camera-preview');
+  var review   = document.getElementById('review-player');
+  var controls = document.getElementById('camera-controls');
+  var camStatus = document.getElementById('camera-status');
+  var writeBtn = document.getElementById('write-only');
+  var form     = document.getElementById('direct-form');
+  var stream   = null;
+  var recorder = null;
+  var chunks   = [];
+  var pendingBlob = null;
+  var videoInput = document.getElementById('video-input');
+
+  if (writeBtn) {
+    writeBtn.addEventListener('click', function () {
+      document.getElementById('description').focus();
+    });
+  }
+
+  if (startBtn && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    startBtn.addEventListener('click', function () {
+      camStatus.textContent = 'جارٍ تشغيل الكاميرا…';
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(function (s) {
+          stream = s;
+          preview.srcObject = s;
+          preview.classList.add('is-on');
+          preview.play();
+          stopBtn.hidden = false;
+          camStatus.textContent = 'الكاميرا تعمل. اضغط "إيقاف التسجيل" عند الانتهاء.';
+          chunks = [];
+          recorder = new MediaRecorder(s);
+          recorder.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+          recorder.onstop = function () {
+            var blob = new Blob(chunks, { type: 'video/webm' });
+            pendingBlob = blob;
+            review.src = URL.createObjectURL(blob);
+            review.hidden = false;
+            controls.hidden = false;
+            preview.classList.remove('is-on');
+            stopBtn.hidden = true;
+            camStatus.textContent = 'راجع التسجيل قبل الإرسال.';
+          };
+          recorder.start();
+        })
+        .catch(function () {
+          camStatus.textContent = 'تعذّر الوصول إلى الكاميرا أو الميكروفون. يمكنك كتابة البلاغ.';
+        });
+    });
+
+    stopBtn.addEventListener('click', function () {
+      if (recorder && recorder.state !== 'inactive') { recorder.stop(); }
+      if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    });
+
+    document.getElementById('use-recording').addEventListener('click', function () {
+      if (!pendingBlob) { return; }
+      var file = new File([pendingBlob], 'direct_' + Date.now() + '.webm', { type: 'video/webm' });
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      videoInput.files = dt.files;
+      camStatus.textContent = 'تم اعتماد التسجيل. اضغط "إرسال البلاغ".';
+      controls.hidden = true;
+      review.hidden = true;
+    });
+
+    document.getElementById('re-record').addEventListener('click', function () {
+      pendingBlob = null;
+      review.hidden = true;
+      controls.hidden = true;
+      camStatus.textContent = 'اضغط "تسجيل فيديو" للبدء من جديد.';
+    });
+
+    form.addEventListener('submit', function () {
+      if (recorder && recorder.state === 'recording') { recorder.stop(); }
+      if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); }
+    });
+  } else if (startBtn) {
+    startBtn.disabled = true;
+  }
+
+  if (window.AHMINI_map) {
+    window.AHMINI_map.init({
+      containerId: 'location-map',
+      latInputId:  'latitude',
+      lngInputId:  'longitude',
+      descInputId: 'location_description',
+      gpsButtonId: 'use-gps',
+      statusId:    'gps-status'
+    });
+  }
+});
+</script>
+{% endblock %}
