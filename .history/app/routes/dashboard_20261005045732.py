@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.extensions import db
 from app.forms.complaint import (
-    ALL_SUBCATEGORIES,
+    COMPLAINT_TYPES,
     INDIRECT_CATEGORIES,
     REPORT_MODES,
 )
@@ -86,7 +86,7 @@ def index():
         mode_filter=mode_filter,
         assignment_filter=assignment_filter,
         categories=INDIRECT_CATEGORIES,
-        complaint_types=ALL_SUBCATEGORIES,
+        complaint_types=dict(COMPLAINT_TYPES),
         modes=REPORT_MODES,
         assignments=ASSIGNMENT_CHOICES,
     )

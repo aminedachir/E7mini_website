@@ -51,12 +51,12 @@ SUBCATEGORIES = {
     ],
 }
 
-# قاموس مسطّح للترجمة في لوحة الشرطة والقوالب
-ALL_SUBCATEGORIES = {
-    key: label
+# قاموس مسطّح للأنواع الفرعية (للاستخدام في القوالب، الترجمة، والتحقق)
+COMPLAINT_TYPES = [
+    (key, label)
     for subs in SUBCATEGORIES.values()
     for key, label in subs
-}
+]
 
 REPORT_MODES = {
     "direct": "تبليغ مباشر",
@@ -90,7 +90,7 @@ class ComplaintForm(FlaskForm):
     )
     complaint_type = SelectField(
         "نوع البلاغ",
-        choices=[],
+        choices=[("", "— اختر النوع —")] + COMPLAINT_TYPES,
         validators=[DataRequired(message="يرجى اختيار نوع البلاغ.")],
     )
     description = TextAreaField(
@@ -129,23 +129,12 @@ class ComplaintForm(FlaskForm):
         ],
     )
 
-    def __init__(self, *args, category=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        # الفئة تُمرَّر من المسار لملء أنواعها الفرعية فقط
-        if category and category in SUBCATEGORIES:
-            self.complaint_type.choices = [("", "— اختر النوع —")] + SUBCATEGORIES[category]
-            self.category.data = category
-        else:
-            # احتياطي: كل الأنواع (يُستخدم للتبليغ المباشر)
-            self.complaint_type.choices = [("", "— اختر النوع —")] + [
-                (key, label) for key, label in ALL_SUBCATEGORIES.items()
-            ]
-
     def validate_complaint_type(self, field):
+        """يتحقق أن النوع الفرعي يخص الفئة المختارة."""
         category = self.category.data
-        if not category or category not in SUBCATEGORIES:
+        if not category:
             return
-        allowed = {key for key, _ in SUBCATEGORIES[category]}
+        allowed = {key for key, _ in SUBCATEGORIES.get(category, [])}
         if field.data and field.data not in allowed:
             raise ValidationError("النوع الفرعي المحدد لا يخص الفئة المختارة.")
 

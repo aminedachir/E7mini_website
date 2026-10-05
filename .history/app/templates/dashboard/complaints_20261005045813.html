@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}الشكاوى الواردة — لوحة العمليات{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+
+    <div class="page-head">
+      <h1>الشكاوى الواردة</h1>
+      <p class="lead">استعرض الشكاوى الواردة وصفّها حسب النوع وطريقة التبليغ والجهة.</p>
+    </div>
+
+    <form method="get" action="{{ url_for('dashboard.index') }}" class="filter-bar" role="search">
+      <div class="filter-field">
+        <label class="form-label" for="category">النوع</label>
+        <select class="form-control" id="category" name="category">
+          <option value="">— كل الأنواع —</option>
+          {% for key, label in categories.items() %}
+            <option value="{{ key }}" {% if category_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="form-label" for="mode">طريقة التبليغ</label>
+        <select class="form-control" id="mode" name="mode">
+          <option value="">— الكل —</option>
+          {% for key, label in modes.items() %}
+            <option value="{{ key }}" {% if mode_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label class="form-label" for="assigned">الجهة</label>
+        <select class="form-control" id="assigned" name="assigned">
+          <option value="">— الكل —</option>
+          {% for key, label in assignments %}
+            {% if key %}
+              <option value="{{ key }}" {% if assignment_filter == key %}selected{% endif %}>{{ label }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">تصفية</button>
+        {% if category_filter or mode_filter or assignment_filter %}
+          <a class="btn btn-outline btn-sm" href="{{ url_for('dashboard.index') }}">إزالة الفلاتر</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <p class="results-count">
+      عدد الشكاوى: <strong>{{ complaints | length }}</strong>
+    </p>
+
+    {% if complaints %}
+      <div class="table-wrapper">
+        <table class="table">
+          <caption class="visually-hidden">قائمة الشكاوى</caption>
+          <thead>
+            <tr>
+              <th>الرقم المرجعي</th>
+              <th>النوع</th>
+              <th>التفصيل</th>
+              <th>مقدّم الشكوى</th>
+              <th>الهاتف</th>
+              <th>طريقة التبليغ</th>
+              <th>التاريخ</th>
+              <th>الحالة</th>
+              <th>الجهة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('dashboard.complaint_detail', complaint_id=c.id) }}">
+                    <span dir="ltr">{{ c.reference_number }}</span>
+                  </a>
+                </td>
+                <td>
+                  {% if c.category and c.category in categories %}
+                    {{ categories[c.category] }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.complaint_type and c.complaint_type in complaint_types %}
+                    {{ complaint_types[c.complaint_type] }}
+                  {% elif c.complaint_type %}
+                    {{ c.complaint_type }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>{{ c.citizen_name }}</td>
+                <td><span dir="ltr">{{ c.citizen_phone }}</span></td>
+                <td>
+                  {% if c.report_mode == "direct" %}
+                    <span class="badge badge-warning">مباشر</span>
+                  {% else %}
+                    <span class="badge badge-info">غير مباشر</span>
+                  {% endif %}
+                </td>
+                <td>{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><span class="badge badge-neutral">{{ c.status }}</span></td>
+                <td>
+                  {% if c.assigned_to %}
+                    <span class="badge badge-info">{{ c.assigned_to_label }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p class="empty-state-title">لا توجد شكاوى مطابقة</p>
+        <p>لم يتم العثور على شكاوى تطابق الفلاتر المحددة.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
